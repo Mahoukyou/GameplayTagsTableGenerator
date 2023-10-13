@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Gameplay Tags - Table Generator",
+	"Description": "Helper for autmatically populating gameplay tags datatable from source table row names",
+	"Category": "Other",
+	"CreatedBy": "Dawid Wdowiak",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "WDGameplayTagsTableGenerator",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
