@@ -6,6 +6,9 @@
 #include "GameplayTagsManager.h"
 #include "Engine/DataTable.h"
 
+// TODO: Logs
+// TODO: CDT Support as alternative to array of tables
+
 void FWDGameplayTagsTableGeneratorModule::StartupModule()
 {
 	OnObjectPreSave_DelegateHandle = FCoreUObjectDelegates::OnObjectPreSave.AddRaw(this, &FWDGameplayTagsTableGeneratorModule::OnDataTableChanged);
@@ -35,14 +38,7 @@ void FWDGameplayTagsTableGeneratorModule::OnDataTableChanged(UObject* const InOb
 		return;
 	}
 
-	const UDataTable* const SourceDataTable = GameplayTagsTables->SourceDataTableSoft.Get();
 	UDataTable* const GameplayTagsDataTable = GameplayTagsTables->GameplayTagsDataTableSoft.LoadSynchronous();
-
-	if (!SourceDataTable || !GameplayTagsDataTable || SourceDataTable == GameplayTagsDataTable || SourceDataTable != InObjectSaved)
-	{
-		return;
-	}
-
 	if (GameplayTagsDataTable->GetRowStruct() != FGameplayTagTableRow::StaticStruct())
 	{
 		return;
@@ -51,8 +47,22 @@ void FWDGameplayTagsTableGeneratorModule::OnDataTableChanged(UObject* const InOb
 	// Needed to update data table editor if open, as it needs to handle the change (otherwise crash)
 	FDataTableEditorUtils::BroadcastPreChange(GameplayTagsDataTable, FDataTableEditorUtils::EDataTableChangeInfo::RowList);
 
+	TSet<FName> RowsToAdd;
+	for (const TSoftObjectPtr<UDataTable> SourceDataTableSoft : GameplayTagsTables->SourceDataTablesSoft)
+	{
+		const UDataTable* const SourceDataTable = SourceDataTableSoft.LoadSynchronous();
+		if (SourceDataTable == GameplayTagsDataTable)
+		{
+			continue;
+		}
+
+		// Push into set first, so we can sort them across all source tables
+		RowsToAdd.Append(SourceDataTable->GetRowNames());
+	}
+
+	RowsToAdd.StableSort([](const FName& InLHS, const FName& InRHS) { return InLHS.LexicalLess(InRHS); });
 	GameplayTagsDataTable->EmptyTable();
-	for (const FName& RowName : SourceDataTable->GetRowNames())
+	for (const FName& RowName : RowsToAdd)
 	{
 		FGameplayTagTableRow NewRow;
 		NewRow.Tag = RowName;
@@ -61,7 +71,7 @@ void FWDGameplayTagsTableGeneratorModule::OnDataTableChanged(UObject* const InOb
 	}
 
 	GameplayTagsDataTable->HandleDataTableChanged(NAME_None);
-	GameplayTagsDataTable->MarkPackageDirty();
+	(void) GameplayTagsDataTable->MarkPackageDirty();
 
 	FDataTableEditorUtils::BroadcastPostChange(GameplayTagsDataTable, FDataTableEditorUtils::EDataTableChangeInfo::RowList);
 
@@ -74,7 +84,7 @@ const FWDGameplayTagsTableInfo* FWDGameplayTagsTableGeneratorModule::FindDataTab
 	const TArray<FWDGameplayTagsTableInfo>& TablesList = UWDGameplayTagsTableGeneratorSettings::Get().GameplayTagsTables;
 
 	return TablesList.FindByPredicate([InSourceDataTable](const FWDGameplayTagsTableInfo& InTablePair) {
-		return InTablePair.SourceDataTableSoft == InSourceDataTable;
+		return InTablePair.SourceDataTablesSoft.Contains(InSourceDataTable);
 	});
 }
 
