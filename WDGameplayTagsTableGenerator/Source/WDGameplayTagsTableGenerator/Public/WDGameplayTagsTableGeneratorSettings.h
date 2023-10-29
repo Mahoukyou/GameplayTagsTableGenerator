@@ -12,7 +12,7 @@ struct FWDGameplayTagsTableInfo
 
 public:
 	UPROPERTY(Config, EditAnywhere, DisplayName = "Source Data Table")
-	TSoftObjectPtr<UDataTable> SourceDataTableSoft = nullptr;
+	TArray<TSoftObjectPtr<UDataTable>> SourceDataTablesSoft;
 
 	UPROPERTY(Config, EditAnywhere, DisplayName = "Gameplay Tags Data Table") // todo, constrain to specific table
 	TSoftObjectPtr<UDataTable> GameplayTagsDataTableSoft = nullptr;
