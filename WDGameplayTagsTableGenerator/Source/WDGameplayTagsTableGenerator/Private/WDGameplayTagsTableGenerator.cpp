@@ -51,7 +51,7 @@ void FWDGameplayTagsTableGeneratorModule::OnDataTableChanged(UObject* const InOb
 	for (const TSoftObjectPtr<UDataTable> SourceDataTableSoft : GameplayTagsTables->SourceDataTablesSoft)
 	{
 		const UDataTable* const SourceDataTable = SourceDataTableSoft.LoadSynchronous();
-		if (SourceDataTable == GameplayTagsDataTable)
+		if (SourceDataTable == GameplayTagsDataTable || !SourceDataTable)
 		{
 			continue;
 		}
